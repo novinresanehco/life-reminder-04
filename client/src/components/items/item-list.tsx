@@ -86,7 +86,7 @@ export function ItemList({
                 <SelectValue placeholder={t("Status")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t("All Statuses")}</SelectItem>
+                <SelectItem value="ALL">{t("All Statuses")}</SelectItem>
                 <SelectItem value="TODO">{t("TODO")}</SelectItem>
                 <SelectItem value="IN_PROGRESS">{t("IN_PROGRESS")}</SelectItem>
                 <SelectItem value="DONE">{t("DONE")}</SelectItem>
@@ -100,7 +100,7 @@ export function ItemList({
                 <SelectValue placeholder={t("Importance")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t("All Levels")}</SelectItem>
+                <SelectItem value="ALL">{t("All Levels")}</SelectItem>
                 <SelectItem value="LOW">{t("LOW")}</SelectItem>
                 <SelectItem value="MEDIUM">{t("MEDIUM")}</SelectItem>
                 <SelectItem value="HIGH">{t("HIGH")}</SelectItem>

@@ -231,6 +231,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     try {
       const notificationId = parseInt(req.params.id);
+      // Check if ID is valid
+      if (isNaN(notificationId) || notificationId <= 0) {
+        return res.status(400).json({ error: 'Invalid notification ID' });
+      }
       await storage.markNotificationAsRead(notificationId);
       res.sendStatus(204);
     } catch (error) {
