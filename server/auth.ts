@@ -11,7 +11,15 @@ import { pool } from "./db";
 
 declare global {
   namespace Express {
-    interface User extends User {}
+    // Fix the circular reference by explicitly defining the User interface
+    interface User {
+      id: number;
+      username: string;
+      password: string;
+      email: string | null;
+      created_at: Date | null;
+      locale: string;
+    }
   }
 }
 

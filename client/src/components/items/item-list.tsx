@@ -36,8 +36,8 @@ export function ItemList({
   
   // State for filters
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<string>("");
-  const [importance, setImportance] = useState<string>("");
+  const [status, setStatus] = useState<string>("ALL");
+  const [importance, setImportance] = useState<string>("ALL");
   const [sortBy, setSortBy] = useState<string>("updated_at");
   const [sortOrder, setSortOrder] = useState<string>("desc");
   
