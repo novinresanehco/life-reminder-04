@@ -12,8 +12,16 @@ export function Sidebar() {
   const [location] = useLocation();
   const { isRTL } = useLocale();
   
+  // Define AIModel type
+  interface AIModel {
+    id: number;
+    name: string;
+    is_active: boolean;
+    status: string;
+  }
+  
   // Get AI models
-  const { data: aiModels = [] } = useQuery({
+  const { data: aiModels = [] } = useQuery<AIModel[]>({
     queryKey: ["/api/ai-models"],
   });
   
@@ -41,16 +49,14 @@ export function Sidebar() {
             const isActive = location === item.path;
             return (
               <li className="mb-1" key={index}>
-                <Link href={item.path}>
-                  <a className={cn(
-                    "flex items-center py-2 px-3 rounded-md",
-                    isActive 
-                      ? "bg-primary-50 text-primary-500" 
-                      : "hover:bg-neutral-100 text-neutral-700"
-                  )}>
-                    <item.icon className={cn("w-5 h-5", isRTL ? "ml-3" : "mr-3")} />
-                    <span>{item.label}</span>
-                  </a>
+                <Link href={item.path} className={cn(
+                  "flex items-center py-2 px-3 rounded-md",
+                  isActive 
+                    ? "bg-primary-50 text-primary-500" 
+                    : "hover:bg-neutral-100 text-neutral-700"
+                )}>
+                  <item.icon className={cn("w-5 h-5", isRTL ? "ml-3" : "mr-3")} />
+                  <span>{item.label}</span>
                 </Link>
               </li>
             );
@@ -59,15 +65,13 @@ export function Sidebar() {
           <li className="mt-6 mb-2">
             <div className="flex items-center justify-between px-3">
               <span className="text-xs font-medium text-neutral-500">{t('AI Models')}</span>
-              <Link href="/settings">
-                <a className="text-neutral-400 text-xs hover:text-neutral-700">
-                  <Settings className="h-3 w-3" />
-                </a>
+              <Link href="/settings" className="text-neutral-400 text-xs hover:text-neutral-700">
+                <Settings className="h-3 w-3" />
               </Link>
             </div>
           </li>
           
-          {aiModels.map((model: any, index: number) => (
+          {aiModels.map((model, index) => (
             <li className="mb-1 pr-3" key={index}>
               <div className="flex items-center text-sm text-neutral-600 py-1.5">
                 <span className={cn(
