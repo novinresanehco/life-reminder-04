@@ -13,6 +13,14 @@ import { Plus, ChevronRight } from "lucide-react";
 import { useLocale } from "@/hooks/use-locale";
 import { cn } from "@/lib/utils";
 
+// Define statistics type for better type checking
+interface ItemStats {
+  totalItems: number;
+  byStatus: Array<{ name: string; value: number }>;
+  byType: Array<{ name: string; value: number }>;
+  byImportance: Array<{ name: string; value: number; color: string }>;
+}
+
 export default function HomePage() {
   const { t } = useTranslation();
   const [location, navigate] = useLocation();
@@ -20,12 +28,18 @@ export default function HomePage() {
   const { format } = useDate();
   const { isRTL } = useLocale();
   
-  // Get current date
+  // Get current date - with error handling
   const today = new Date();
-  const formattedDate = format(today, 'PPP');
+  let formattedDate = '';
+  try {
+    formattedDate = format(today, 'PPP');
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    formattedDate = today.toLocaleDateString();
+  }
   
-  // Fetch item statistics
-  const { data: stats } = useQuery({
+  // Fetch item statistics with proper typings
+  const { data: stats } = useQuery<ItemStats>({
     queryKey: ['/api/stats'],
     queryFn: () => ({
       totalItems: 12,
@@ -50,6 +64,14 @@ export default function HomePage() {
     }),
   });
   
+  // Safe access to stats data
+  const safeStats = stats || {
+    totalItems: 0,
+    byStatus: [],
+    byType: [],
+    byImportance: []
+  };
+  
   const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
   
   return (
@@ -57,7 +79,7 @@ export default function HomePage() {
       <div className="container mx-auto max-w-6xl">
         {/* Greeting */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">{t('Hello')}, {user?.username}</h1>
+          <h1 className="text-3xl font-bold">{t('Hello')}, {user?.username || t('User')}</h1>
           <p className="text-neutral-600 mt-1">{t('Today is')} {formattedDate}</p>
         </div>
         
@@ -70,7 +92,7 @@ export default function HomePage() {
               <CardDescription>{t('Across all categories')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{stats?.totalItems || 0}</div>
+              <div className="text-3xl font-bold">{safeStats.totalItems}</div>
               <Button 
                 variant="link" 
                 className="px-0" 
@@ -89,11 +111,11 @@ export default function HomePage() {
               <CardDescription>{t('Distribution by priority')}</CardDescription>
             </CardHeader>
             <CardContent className="h-[150px]">
-              {stats?.byImportance && (
+              {safeStats.byImportance && safeStats.byImportance.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={stats.byImportance}
+                      data={safeStats.byImportance}
                       cx="50%"
                       cy="50%"
                       innerRadius={30}
@@ -103,13 +125,17 @@ export default function HomePage() {
                       nameKey="name"
                       label
                     >
-                      {stats.byImportance.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      {safeStats.byImportance.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-neutral-500">
+                  {t('No data available')}
+                </div>
               )}
             </CardContent>
           </Card>
@@ -121,10 +147,10 @@ export default function HomePage() {
               <CardDescription>{t('Progress overview')}</CardDescription>
             </CardHeader>
             <CardContent className="h-[150px]">
-              {stats?.byStatus && (
+              {safeStats.byStatus && safeStats.byStatus.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={stats.byStatus}
+                    data={safeStats.byStatus}
                     margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
                   >
                     <XAxis dataKey="name" fontSize={12} />
@@ -133,6 +159,10 @@ export default function HomePage() {
                     <Bar dataKey="value" fill="hsl(var(--primary))" />
                   </BarChart>
                 </ResponsiveContainer>
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-neutral-500">
+                  {t('No data available')}
+                </div>
               )}
             </CardContent>
           </Card>
