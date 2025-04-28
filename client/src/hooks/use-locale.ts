@@ -15,9 +15,11 @@ export function useLocale(): LocaleSettings & {
   const { i18n } = useTranslation();
   const { user, updateLocaleMutation } = useAuth();
   
-  // Parse user's locale preference
+  // Parse user's locale preference - provide a default value
   const userLocale = user?.locale || 'fa-IR';
-  const [language, region] = userLocale.split('-');
+  // Make sure we have a valid format for splitting
+  const localeParts = userLocale?.includes('-') ? userLocale.split('-') : ['fa', 'IR'];
+  const [language, region] = localeParts;
   
   // Set default values based on locale
   const isRTL = language === 'fa';
