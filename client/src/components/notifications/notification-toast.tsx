@@ -62,13 +62,18 @@ export function NotificationToast() {
   }, [notifications, visible, currentNotification]);
   
   const handleClose = async () => {
-    if (currentNotification) {
-      // Mark as read
-      try {
-        await apiRequest('POST', `/api/notifications/${currentNotification.id}/read`);
-        queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
-      } catch (error) {
-        console.error('Error marking notification as read:', error);
+    if (currentNotification && currentNotification.id) {
+      // Ensure notification ID is valid
+      const notificationId = parseInt(String(currentNotification.id));
+      
+      if (!isNaN(notificationId) && notificationId > 0) {
+        // Mark as read
+        try {
+          await apiRequest('POST', `/api/notifications/${notificationId}/read`);
+          queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+        } catch (error) {
+          console.error('Error marking notification as read:', error);
+        }
       }
     }
     
@@ -78,25 +83,29 @@ export function NotificationToast() {
   };
   
   const handleAction = async () => {
-    if (!currentNotification) return;
+    if (!currentNotification || !currentNotification.id) return;
+    
+    // Ensure notification ID is valid
+    const notificationId = parseInt(String(currentNotification.id));
+    if (isNaN(notificationId) || notificationId <= 0) return;
     
     try {
       // Handle different interaction types
       if (currentNotification.interaction_type === 'CHECKBOX') {
         // Send checkbox state
-        await apiRequest('POST', `/api/notifications/${currentNotification.id}/respond`, {
+        await apiRequest('POST', `/api/notifications/${notificationId}/respond`, {
           response: true
         });
       } else if (currentNotification.interaction_type === 'TEXTAREA') {
         // Send text response
-        await apiRequest('POST', `/api/notifications/${currentNotification.id}/respond`, {
+        await apiRequest('POST', `/api/notifications/${notificationId}/respond`, {
           response
         });
         setResponse("");
       }
       
       // Mark as read
-      await apiRequest('POST', `/api/notifications/${currentNotification.id}/read`);
+      await apiRequest('POST', `/api/notifications/${notificationId}/read`);
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
       
       // Hide notification
@@ -109,8 +118,11 @@ export function NotificationToast() {
   
   const handleItemClick = () => {
     if (currentNotification?.item_id) {
-      window.location.href = `/items/${currentNotification.item_id}`;
-      handleClose();
+      const itemId = parseInt(String(currentNotification.item_id));
+      if (!isNaN(itemId) && itemId > 0) {
+        window.location.href = `/items/${itemId}`;
+        handleClose();
+      }
     }
   };
   
