@@ -24,13 +24,24 @@ export class OllamaService {
   }
 
   public async initialize() {
-    // Start discovering Ollama models
-    await this.discoverModels();
-    
-    // Set up regular discovery (every 5 minutes)
-    this.discoveryInterval = setInterval(async () => {
+    try {
+      // Start discovering Ollama models
       await this.discoverModels();
-    }, 5 * 60 * 1000);
+      
+      // Set up regular discovery (every 5 minutes)
+      this.discoveryInterval = setInterval(async () => {
+        try {
+          await this.discoverModels();
+        } catch (error: any) {
+          console.log("Error during scheduled Ollama model discovery:", error?.message || "Unknown error");
+          // Continue running - don't let errors stop the interval
+        }
+      }, 5 * 60 * 1000);
+    } catch (error: any) {
+      console.log("Error during initial Ollama model discovery:", error?.message || "Unknown error");
+      // Just continue - the system can work without Ollama
+      this.models = []; // Ensure empty array
+    }
     
     return this.models;
   }
@@ -256,32 +267,32 @@ export class OllamaService {
             message: `Successfully processed with ${model.name}`,
             details: { 
               summary: parsedResult.summary,
-              riskCount: parsedResult.risks?.length,
-              actionItemCount: parsedResult.actionItems?.length
+              riskCount: parsedResult.risks?.length || 0,
+              actionItemCount: parsedResult.actionItems?.length || 0
             }
           }).returning();
           
           result.logs.push(successLog[0]);
-        } catch (parseError) {
+        } catch (parseError: any) {
           // Handle JSON parsing error
           const errorLog = await db.insert(aiProcessingLogs).values({
             item_id: itemId,
             model_id: model.id,
             log_level: "CRITICAL",
             message: `Failed to parse response from ${model.name}`,
-            details: { error: parseError.message, rawResponse: completion }
+            details: { error: parseError?.message || "Unknown parsing error", rawResponse: completion }
           }).returning();
           
           result.logs.push(errorLog[0]);
         }
-      } catch (error) {
+      } catch (error: any) {
         // Log processing error
         const errorLog = await db.insert(aiProcessingLogs).values({
           item_id: itemId,
           model_id: model.id,
           log_level: "CRITICAL",
-          message: `Error processing with ${model.name}: ${error.message}`,
-          details: { error: error.stack }
+          message: `Error processing with ${model.name}: ${error?.message || "Unknown error"}`,
+          details: { error: error?.stack || "No stack trace available" }
         }).returning();
         
         result.logs.push(errorLog[0]);

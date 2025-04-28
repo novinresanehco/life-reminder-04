@@ -197,15 +197,15 @@ export class DatabaseStorage implements IStorage {
     let query = db.select().from(items).where(eq(items.user_id, userId));
     
     // Apply filters
-    if (filters.type) {
+    if (filters.type && filters.type !== 'ALL') {
       query = query.where(eq(items.type, filters.type));
     }
     
-    if (filters.status) {
+    if (filters.status && filters.status !== 'ALL') {
       query = query.where(eq(items.status, filters.status));
     }
     
-    if (filters.importance) {
+    if (filters.importance && filters.importance !== 'ALL') {
       query = query.where(eq(items.importance, filters.importance));
     }
     
