@@ -1,0 +1,391 @@
+
+
+# Project Specification: Intelligent Life Operating System (Intelligent LifeOS)
+
+**Document Version:** 1.1 (English)
+**Primary Development Language:** English (for code, comments, and this specification)
+**Target Application Languages:** Persian (fa - Default), English (en)
+**Target Application Calendars:** Jalali (Solar Hijri - Default for 'fa'), Gregorian (Default for 'en')
+
+**Purpose of this Document:** To provide a complete and precise specification to the AI Agent for building the "Intelligent LifeOS" platform from scratch with minimal deviation and errors, strictly adhering to the requirements outlined herein. **Crucially, while this document is in English, the final application MUST support both Persian and English UI, and both Jalali and Gregorian calendars, defaulting to Persian/Jalali, as detailed below.**
+
+## 1. Project Goal
+
+*   **Short Description:** Develop an intelligent, proactive platform for holistic personal productivity and life management, named "Intelligent LifeOS". This system will organize user information (Tasks, Projects, Goals, Ideas, Notes - collectively referred to as "Items") and, more importantly, deeply process this information via a sophisticated "AI Orchestrator". This orchestrator leverages multiple AI models (including all active user-configured local Ollama instances) based on each Item's "Importance Level" to analyze, refine, decompose, and generate actionable insights. The system features proactive user engagement, progress tracking, and task automation through "Execution Modules". The ultimate goal is to provide the user with a highly personalized, intelligent, and actionable "second brain".
+*   **Target Audience:** Individuals seeking an integrated, intelligent solution for organizing personal information, managing tasks, tracking long-term goals, and receiving active AI assistance to achieve them.
+*   **Critical i18n/l10n Note:** The final application must be fully internationalized, supporting Persian (default) and English languages, and Jalali (default) and Gregorian calendars, based on user preference.
+
+## 2. Core Features
+
+*   **F1: Item Management**
+    *   Create, Read, Update, Delete (CRUD) for various Item types (Task, Project, Goal, Idea, Note).
+    *   Each Item possesses attributes like: title, description, status, priority, **Importance Level**, created/updated/due dates, tags.
+    *   Ability to define relationships between Items (parent/child, related, depends_on, blocks).
+    *   Ability for the user to set (or AI to infer) the **Importance Level** for each Item: `LOW`, `MEDIUM` (Default), `HIGH`, `CRITICAL`. This level is the core driver for AI processing.
+
+*   **F2: AI Orchestrator**
+    *   Manages a pool of configured AI models (API-based and all user-activated local Ollama models).
+    *   Selects model(s) and "Processing Strategy" based primarily on Item **Importance Level**, type, user request, and context.
+    *   Responsible for deep analysis, task decomposition, continuous refinement, result synthesis, log generation, and AI-driven challenge resolution.
+    *   **Processing Strategies:**
+        *   **LOW (Single Basic):** Uses one fast, cost-effective model (e.g., smallest active Ollama model). Basic analysis (tagging, keyword extraction).
+        *   **MEDIUM (Single Best):** Uses the most suitable single model (capability/cost balance). Standard summarization, basic task breakdown.
+        *   **HIGH (Multi-Model Selective):** Uses 2-3 selected models (mix of API & active Ollama) with Competitive, Consensus, or Sequential Pipeline strategies. Deeper analysis, validation, robust planning.
+        *   **CRITICAL (All-Encompassing Multi-Model Analysis):** Utilizes **all** user-activated models (API + all active Ollama). Employs advanced strategies (Competitive, Consensus, Sequential) iteratively and concurrently. Aims for maximum depth, diverse perspectives, rigorous cross-validation, creative exploration. Processing is frequent (e.g., daily or on relevant updates).
+
+*   **F3: Deep Ollama Integration**
+    *   A dedicated backend service to manage interactions with the user's local Ollama setup.
+    *   Automatically discovers all installed Ollama models on the user's machine.
+    *   Performs health checks on Ollama models.
+    *   Routes requests from AI Workers to the specified Ollama model.
+    *   Manages responses from Ollama.
+    *   Allows users to enable/disable the use of each discovered Ollama model in settings. The Orchestrator only uses activated models.
+
+*   **F4: AI Output Presentation**
+    *   **AI Insights (Processing Results):** Key, actionable, summarized outputs from AI analysis (e.g., action plans, critical summaries, risk assessments, generated sub-tasks). Must be stored structurally and presented clearly in the Item's "Overview" tab.
+    *   **Deep Thought Logs (AI Reasoning Logs):** Granular, step-by-step records of the AI's reasoning process, especially for HIGH and CRITICAL Items. Includes: prompts, intermediate thoughts, model selections, raw outputs (optional display), decision points. Purpose: traceability and understanding the AI process. Features user management (filtering by log level, deletion of non-critical logs).
+
+*   **F5: Proactive Engagement**
+    *   System automatically initiates interactions with the user (via in-app messages, browser notifications, Telegram).
+    *   Interaction triggers: Providing updates, requesting feedback/input, following up on Item status.
+    *   Interactions can be **Interactive** (e.g., including checkboxes for task completion confirmation, or text areas for user elaboration).
+
+*   **F6: Execution Module Interface**
+    *   A standardized internal API/protocol allowing the Orchestrator to delegate actionable tasks (like content generation, research, script execution) to external tools (e.g., n8n, AgenticSeek, or custom scripts).
+
+*   **F7: Internationalization & Localization (i18n / l10n) - CRITICAL REQUIREMENT**
+    *   **Multi-Language Support:**
+        *   Required Languages: **Persian (fa) and English (en)**.
+        *   Default Language: **Persian (fa)**.
+        *   User must be able to select their preferred language in profile settings.
+        *   All User Interface (UI) strings MUST be managed via standard i18n libraries and locale files (e.g., JSON, PO).
+    *   **Multi-Calendar Support:**
+        *   Required Calendars: **Jalali (Solar Hijri) and Gregorian**.
+        *   Default Calendar: **Jalali**.
+        *   User must be able to select their preferred calendar in profile settings.
+        *   All date displays, date input components (Date Pickers), and backend date processing MUST respect the user's selected calendar. Requires using robust date/time libraries supporting both calendars on both frontend and backend.
+    *   **User Preference Storage:** A `locale` field (e.g., 'fa-IR', 'en-US') MUST be added to the users table to store the combined language and regional format preference. This `locale` dictates both language and calendar.
+
+*   **F8: User Management & Settings**
+    *   Secure user registration and login.
+    *   User profile page.
+    *   Settings page for:
+        *   Language selection (Persian/English).
+        *   Calendar selection (Jalali/Gregorian).
+        *   Activating/deactivating AI models (both API and discovered Ollama models).
+        *   Configuring connection details for Execution Modules (e.g., URL and API key for n8n).
+        *   Configuring notification channels (enable/disable Telegram, browser, etc.).
+
+## 3. Technology Stack (Recommended)
+
+*   **Architecture:** Service-Oriented Architecture (SOA) or Microservices strongly recommended.
+*   **Backend:** Python (with FastAPI) or Node.js (with NestJS).
+*   **Frontend:** Single Page Application (SPA) using React, Vue, or Svelte.
+*   **Database:** PostgreSQL (Leverage JSONB heavily for AI data; consider pgvector extension if semantic search is needed later).
+*   **Message Queue:** RabbitMQ or Redis Streams (Essential for asynchronous AI tasks).
+*   **Real-time Communication:** WebSockets (for in-app notifications).
+*   **Caching:** Redis.
+*   **AI Models:**
+    *   Use official SDKs or clients for API models (OpenAI, Anthropic, Google Gemini, etc.).
+    *   Direct API calls to Ollama models via the dedicated Ollama Integration Service.
+*   **i18n/l10n:** Standard libraries for the chosen frontend and backend frameworks (e.g., `react-i18next` for React, `i18next` for Node.js). **Mandatory:** Use date/time management libraries with full support for both Jalali and Gregorian calendars (e.g., `moment-jalaali`, `date-fns-jalali`, or Python equivalents like `jdatetime`).
+
+**Note for AI Agent:** These are recommendations. If strong technical reasons exist for alternatives, they can be considered, but core requirements (like robust i18n support, message queue, PostgreSQL) must be met.
+
+## 4. UI/UX Details
+
+*   **Overall Look & Feel:** Clean, modern, and intuitive design. Focus on simplicity and efficiency.
+*   **Language & Calendar (Critical):**
+    *   The UI MUST render entirely based on the user's selected `locale` ('fa-IR' or 'en-US'), including text strings and layout direction (RTL for Persian, LTR for English).
+    *   All dates MUST be displayed according to the user's selected calendar (Jalali/Gregorian). Date input components (Date Pickers) MUST also operate using the selected calendar.
+*   **Item Detail View:**
+    *   Must be structured and dynamic using tabs:
+        *   **Tab 1: Overview / Main:**
+            *   Display core Item details (title, description, status, Importance Level, dates, tags, relations).
+            *   **AI-Generated Breakdown Section:** Dynamically render content based on `ai_analysis_results` where `is_visible_in_overview = true`. Examples:
+                *   Checklist (for generated sub-tasks).
+                *   Timeline (for generated plans).
+                *   Accordion/FAQ (for identified risks, key questions, summaries).
+                *   Formatted Text (for summaries, explanations).
+            *   Goal: Provide immediate, actionable AI insights without deep digging.
+        *   **Tab 2: AI Insights (Processing Results):**
+            *   Display a historical list of key, significant findings from `ai_analysis_results` for this Item.
+            *   Include: timestamp, summary of findings, perhaps strategy/models used. Focus on conclusions. Read-only.
+        *   **Tab 3: Deep Thought Logs (AI Reasoning Logs):**
+            *   Display detailed step-by-step logs from `ai_processing_logs`.
+            *   **Filtering:** Default view shows `IMPORTANT` and `CRITICAL` level logs. Provide controls to filter by log level (`INFO`, `DEBUG`) and possibly by model used.
+            *   **Display:** Show timestamp, log level, core message. Allow expansion to see more details (full prompt/raw response if stored).
+            *   **Deletion:** Implement a mechanism for users to soft-delete (set `is_deleted = true`) non-critical logs (DEBUG/INFO) to manage clutter and database size. Protect CRITICAL logs from easy deletion.
+*   **Notifications:**
+    *   Display via user's active channels (In-App, Browser, Telegram).
+    *   Support interactive notifications (with buttons, checkboxes, text fields) for quick user feedback.
+*   **Settings:**
+    *   Clear settings page for managing profile, language, calendar, AI model activation, and execution module connection settings.
+
+## 5. Data Model (PostgreSQL)
+
+*   **Note for AI Agent:** Use the following schema as a base. Table and column names must be in English for coding consistency. Comments clarify purpose. **Pay close attention to the `locale` field in the `users` table, as it's critical for i18n/l10n.**
+
+```sql
+-- Enums (Define allowed values for key fields)
+CREATE TYPE item_importance AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL');
+CREATE TYPE log_level AS ENUM ('DEBUG', 'INFO', 'IMPORTANT', 'CRITICAL');
+CREATE TYPE processing_strategy AS ENUM ('SINGLE_BASIC', 'SINGLE_BEST', 'MULTI_MODEL_SELECTIVE', 'ALL_ENCOMPASSING');
+CREATE TYPE model_type AS ENUM ('API', 'OLLAMA_LOCAL');
+CREATE TYPE notification_channel AS ENUM ('IN_APP', 'BROWSER', 'TELEGRAM');
+CREATE TYPE notification_interaction AS ENUM ('INFO', 'CHECKBOX', 'TEXTAREA');
+CREATE TYPE item_type AS ENUM ('TASK', 'PROJECT', 'GOAL', 'IDEA', 'NOTE'); -- Item type
+CREATE TYPE item_status AS ENUM ('TODO', 'IN_PROGRESS', 'DONE', 'ARCHIVED', 'BACKLOG'); -- Example item statuses
+CREATE TYPE relation_type AS ENUM ('PARENT_OF', 'CHILD_OF', 'RELATED_TO', 'BLOCKS', 'DEPENDS_ON'); -- Relationship types
+
+-- Users table
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL, -- Store password hash
+    email VARCHAR(255) UNIQUE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    -- CRITICAL: Stores user's language AND region/calendar preference
+    locale VARCHAR(10) DEFAULT 'fa-IR' NOT NULL -- Examples: 'fa-IR' (Persian/Iran - implies Jalali), 'en-US' (English/US - implies Gregorian)
+);
+
+-- Items table
+CREATE TABLE items (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    item_type item_type NOT NULL, -- Type of item (Task, Project, etc.)
+    title TEXT NOT NULL, -- Title
+    description TEXT, -- Description
+    status item_status DEFAULT 'TODO' NOT NULL, -- Status (e.g., ToDo, Done)
+    priority INT DEFAULT 0, -- Priority
+    importance item_importance DEFAULT 'MEDIUM' NOT NULL, -- Importance Level (core AI driver)
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    due_date TIMESTAMPTZ, -- Due date
+    parent_item_id INT REFERENCES items(id) ON DELETE SET NULL, -- Parent item for hierarchy
+    tags TEXT[] -- Array of text tags
+);
+
+-- Item relationships table
+CREATE TABLE item_relations (
+    id SERIAL PRIMARY KEY,
+    source_item_id INT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+    target_item_id INT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+    relation_type relation_type NOT NULL -- Type of relationship (related, depends_on, etc.)
+);
+
+-- AI Models table
+CREATE TABLE ai_models (
+    id SERIAL PRIMARY KEY,
+    model_name VARCHAR(255) UNIQUE NOT NULL, -- Unique model identifier (e.g., 'ollama/llama3:8b', 'openai/gpt-4')
+    model_type model_type NOT NULL, -- Type (API or OLLAMA_LOCAL)
+    endpoint_url TEXT, -- URL for Ollama or specific APIs
+    api_key_ref TEXT, -- Reference to secure storage location of API key (not the key itself)
+    capabilities JSONB, -- Model capabilities (e.g., '{"text_analysis": true, "planning": true}')
+    config JSONB, -- Default model parameters
+    is_globally_available BOOLEAN DEFAULT TRUE, -- Mainly for API models
+    discovered_at TIMESTAMPTZ -- Timestamp when Ollama models were discovered
+);
+
+-- User preferences for AI models table
+CREATE TABLE user_ai_model_preferences (
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    model_id INT NOT NULL REFERENCES ai_models(id) ON DELETE CASCADE,
+    is_active BOOLEAN DEFAULT TRUE NOT NULL, -- Has the user enabled this model?
+    PRIMARY KEY (user_id, model_id)
+);
+
+-- AI Processing Jobs table
+CREATE TABLE ai_processing_jobs (
+    id BIGSERIAL PRIMARY KEY,
+    item_id INT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- Denormalized for easier lookup
+    requested_at TIMESTAMPTZ DEFAULT NOW(), -- When was the job requested?
+    started_at TIMESTAMPTZ, -- When did it start processing?
+    completed_at TIMESTAMPTZ, -- When did it finish?
+    status VARCHAR(50) NOT NULL, -- Status ('pending', 'running', 'completed', 'failed')
+    strategy processing_strategy NOT NULL, -- Processing strategy used
+    trigger_event VARCHAR(100), -- What triggered the job? (e.g., 'item_updated', 'user_request')
+    priority INT DEFAULT 0 -- Job priority
+);
+
+-- AI Processing Logs table (Deep Thought Logs)
+CREATE TABLE ai_processing_logs (
+    id BIGSERIAL PRIMARY KEY,
+    job_id BIGINT REFERENCES ai_processing_jobs(id) ON DELETE SET NULL,
+    item_id INT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+    timestamp TIMESTAMPTZ DEFAULT NOW(),
+    model_id INT REFERENCES ai_models(id), -- Model used in this step
+    log_level log_level NOT NULL, -- Log level (DEBUG, INFO, IMPORTANT, CRITICAL) for filtering
+    prompt TEXT, -- Prompt sent (optional to store)
+    raw_response TEXT, -- Raw response received (optional to store)
+    processed_message TEXT NOT NULL, -- Core log message (explaining the step)
+    metadata JSONB, -- Additional metadata
+    is_deleted BOOLEAN DEFAULT FALSE NOT NULL -- Soft delete flag for user cleanup
+);
+CREATE INDEX idx_ai_logs_item_level ON ai_processing_logs (item_id, log_level); -- Index for fast UI filtering
+
+-- AI Analysis Results table (AI Insights)
+CREATE TABLE ai_analysis_results (
+    id BIGSERIAL PRIMARY KEY,
+    job_id BIGINT REFERENCES ai_processing_jobs(id) ON DELETE SET NULL,
+    item_id INT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    generated_at TIMESTAMPTZ DEFAULT NOW(), -- When was the result generated?
+    strategy_used processing_strategy, -- Strategy that produced this result
+    models_involved_ids INT[], -- IDs of models involved
+    result_summary TEXT, -- Summary for quick display
+    structured_output JSONB, -- Structured output (CRITICAL for UI rendering, e.g., checklists, plan JSON)
+    is_visible_in_overview BOOLEAN DEFAULT TRUE -- Should this result be shown in the Overview tab?
+);
+
+-- User Notifications table
+CREATE TABLE user_notifications (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    item_id INT REFERENCES items(id) ON DELETE SET NULL, -- Related item (optional)
+    message TEXT NOT NULL, -- Notification message text
+    channel notification_channel NOT NULL, -- Delivery channel (IN_APP, BROWSER, TELEGRAM)
+    interaction_type notification_interaction DEFAULT 'INFO', -- Type (Info, Checkbox, Textarea)
+    interaction_options JSONB, -- Options for interaction (e.g., '{"choices": ["Done", "Snooze"]}')
+    status VARCHAR(50) DEFAULT 'pending', -- Status ('pending', 'sent', 'delivered', 'acknowledged', 'answered')
+    user_response JSONB, -- User's response to interactive notification
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    sent_at TIMESTAMPTZ
+);
+
+-- Add other tables as needed for Execution Modules and their tasks.
+
+6. Feature Implementation Details
+
+AI Orchestrator Logic:
+
+Trigger: Item creation/update, explicit user request ("Analyze Deeply"), scheduled task.
+
+Workflow:
+
+Read Item's importance.
+
+Select appropriate Processing Strategy based on importance.
+
+Identify candidate ai_models (matching required capabilities and is_active=true in user_ai_model_preferences for the user). Must include all active user Ollama models for the CRITICAL strategy.
+
+Construct task definition/prompt(s).
+
+Create job message (incl. item_id, user_id, strategy, model_ids_to_consider, prompt, priority) and publish to the Message Queue.
+
+Ollama Integration Logic:
+
+The dedicated service must have a configurable Ollama base URL (default: http://localhost:11434).
+
+Implement an internal endpoint POST /discover_models to call Ollama's /api/tags and update the ai_models table.
+
+Implement an internal endpoint POST /generate to receive requests from AI Workers, forward them to the appropriate Ollama /api/generate endpoint, and return the response.
+
+Implement a GET /health endpoint to check Ollama availability.
+
+AI Worker Logic:
+
+Consume jobs from the message queue.
+
+Execute the specified Processing Strategy:
+
+Fetch full Item details and related context.
+
+For multi-model strategies: Make concurrent calls to different models (via API clients or the Ollama Integration Service). Implement comparison/consensus logic (potentially using another AI call for semantic similarity or a simpler evaluation function).
+
+Detailed Logging: Generate comprehensive logs in ai_processing_logs for each step (model selected, prompt, raw response, analysis/decision). Tag logs with the appropriate log_level.
+
+Result Storage: Synthesize final, user-facing outcomes and store them structurally in ai_analysis_results (the structured_output JSONB field is crucial). Set the is_visible_in_overview flag.
+
+Update job status in ai_processing_jobs.
+
+Continuous Refinement: Implement a backend scheduler (e.g., Celery Beat in Python, node-cron in Node.js) to periodically queue processing jobs for HIGH (e.g., weekly) and CRITICAL (e.g., daily or on relevant updates) items.
+
+Proactive Engagement Logic:
+
+The Engagement Service should monitor Item statuses (due dates), AI processing completion/failures, and Execution Task statuses.
+
+Select delivery channel (In-App, Browser, Telegram) based on user presence (tracking last activity) and user settings.
+
+Fully implement interactive notifications, storing status and user responses in user_notifications.
+
+Execution Module Interface:
+
+Define internal REST API endpoints (Example):
+
+POST /api/v1/execution/tasks: To trigger an execution task (pass module name like 'n8n', 'agenticseek', item_id, task definition JSON).
+
+GET /api/v1/execution/tasks/{task_id}: To get status/results.
+
+A small service (or part of the Execution Interface Service) handles the actual communication with local n8n/AgenticSeek APIs using user-provided credentials (stored securely).
+
+i18n/l10n Implementation (Mandatory):
+
+Strict use of standard i18n libraries in both frontend and backend.
+
+Manage all UI strings via locale files (e.g., fa.json, en.json).
+
+Strict use of date/time libraries with full support for Jalali and Gregorian calendars in both frontend and backend.
+
+All date-related operations (display, input, calculations) MUST respect the user's locale setting.
+
+7. Non-Functional Requirements
+
+Asynchronous Operations: All AI processing and external communications (Ollama, APIs, Execution Modules, Notifications) MUST be handled asynchronously via the message queue and background workers. The UI must provide appropriate feedback for pending operations.
+
+API Design: Use clear, well-documented RESTful or GraphQL APIs between services and between frontend and backend.
+
+Error Handling & Resilience: Implement robust error handling in workers (e.g., retries for transient network issues), handle Ollama unavailability gracefully, manage API rate limits. Log errors effectively.
+
+Security: High priority: Secure API key storage (e.g., Vault, KMS, environment variables), strong authentication/authorization (e.g., JWT), input sanitization, protection against common web vulnerabilities (OWASP Top 10).
+
+Scalability: Design workers and services to be horizontally scalable. Optimize database queries (use EXPLAIN, add appropriate indexes). Use caching (Redis) for frequently accessed data (user prefs, model capabilities).
+
+Configuration: Make key parameters configurable (Ollama URL, API endpoints, default AI parameters, queue names, etc., preferably via environment variables or config files).
+
+Testing: Implement unit, integration, and end-to-end tests, especially covering the AI Orchestrator logic, different processing strategies, and the critical i18n/l10n requirements.
+
+8. Acceptance Criteria
+
+AC1 (i18n/l10n): User can switch language between Persian and English in settings, and the entire UI (text, layout direction) updates immediately and correctly.
+
+AC2 (i18n/l10n): User can switch the calendar between Jalali and Gregorian in settings, and all displayed dates and date pickers function correctly according to the selected calendar.
+
+AC3 (Orchestrator - Critical): Creating/updating an Item with importance = CRITICAL triggers a processing job using the ALL_ENCOMPASSING strategy, utilizing all user-activated AI models (API + all active Ollama).
+
+AC4 (Orchestrator - Low): Creating/updating an Item with importance = LOW triggers a processing job using the SINGLE_BASIC strategy.
+
+AC5 (Ollama Integration): The system correctly discovers the user's locally installed Ollama models, and the user can activate/deactivate them in settings. The Orchestrator respects this activation status.
+
+AC6 (UI - Overview): Key AI processing results (summaries, generated sub-tasks, etc.) are displayed in the corresponding Item's "Overview" tab (based on the is_visible_in_overview flag).
+
+AC7 (UI - Logs): Detailed AI processing logs are viewable in the "Deep Thought Logs" tab, filterable by log_level, and non-critical logs can be soft-deleted by the user.
+
+AC8 (Engagement): Proactive notifications (e.g., due date reminders, AI processing completion) are sent via the user's configured channels (at least in-app). Interactive notifications function correctly, and user responses are recorded.
+
+AC9 (Persistence): All data (Items, user settings including locale, AI results and logs, notification statuses) is correctly persisted in the PostgreSQL database and available after application reload.
+
+AC10 (Execution Module): The system can successfully delegate a simple task to an execution module (e.g., n8n, if configured) via the internal API, triggered potentially by an AI process.
+
+9. Out of Scope (for Initial Version)
+
+Native mobile applications (focus is on a responsive SPA web application).
+
+Advanced team collaboration features (e.g., sharing items between users with different permission levels).
+
+Real-time multi-user editing.
+
+Implementation of all possible execution modules (initial focus on the interface and integration with one example like n8n).
+
+Highly advanced semantic search capabilities across all items (may be added in later phases).
+
+Complex plugin system for users to add new Item types or modules.
+
+Automated deployment scripts (focus is on the application code itself).
+
+10. Conclusion and Final Emphasis for AI Agent
+
+This specification document provides a detailed blueprint for building the "Intelligent LifeOS" platform. Please follow all sections meticulously. The core focus areas are the Importance Level-driven Orchestrator logic, deep integration with Ollama, the structured presentation of AI outputs in the UI, and the correct and complete implementation of the critical i18n/l10n requirements (Persian/English UI & Jalali/Gregorian Calendar with correct defaults). The expected output is a functional, stable application adhering to all details specified herein. During development, adhere strictly to this document. If ambiguity arises regarding implementation details, make logical assumptions based on best practices and document them.
+
+This English version maintains all the details of the Persian one but presents them in English for potentially better processing by the AI Agent, while strongly emphasizing the mandatory Persian/Jalali defaults and multi-language/calendar support for the final application. Good luck with the development!
